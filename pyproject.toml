@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hotconsole"
+version = "0.1.5"
+authors = [
+  { name="Michael Noskov", email="vecheren@gmail.com" },
+]
+description = "Provides an easy way to run your scripts by console commands and hotkeys"
+keywords = ["hotkeys", "terminal", "console", "hotstrings", "commands", "scripts"]
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+]
+dependencies = [
+  "console>=0.9907",
+  "keyboard>=0.13.5",
+  "pydantic>=2.5.3",
+  "pydantic-core>=2.14.6",
+  "pyperclip>=1.8.2",
+  "pywin32>=306",
+  "pywin32-ctypes>=0.2.2",
+  "requests>=2.31.0",
+  "requests-toolbelt>=1.0.0",
+  "charset-normalizer>=3.0.1",
+  "colorama>=0.4.6",
+  "Pillow>=9.5.0",
+  "pylibdmtx>=0.1.10"
+]
+
+[project.urls]
+Homepage = "https://github.com/Vecheren/hotconsole"
+Issues = "https://github.com/Vecheren/hotconsole/issues"
