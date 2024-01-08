@@ -29,6 +29,8 @@ from hotconsole.helpers import OSHelper
 
 SCRIPTS_PATH = sys.path[0]
 CONFIG_PATH = os.path.join(SCRIPTS_PATH, "data.json")
+MAIN_NAME = os.path.abspath(str(sys.modules['__main__'].__file__)).split("\\")[-1]
+DEFAULT_TITLE = "Hotconsole Scripts"
 Hotkey = collections.namedtuple("Hotkey", ["keyboard_key", "command", "option_number"])
 Hotstring = collections.namedtuple("Hotstring", ["abbreviation", "description", "string"])
 
@@ -281,14 +283,16 @@ class Init:
             cls.clean_excess_fields(init_config)
 
     @classmethod
-    def add_to_startup(cls):
+    def add_to_startup(cls, title: str):
         """Предлагает автоматически добавить скрипты в папку с автозагрузкой"""
         config = Config.load_config()
         if config.refuseStartup:
             return
         try:
             startup_path = r"C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup" % getpass.getuser()
-            bat_path = os.path.join(startup_path, "run_cashbox_scripts.bat")
+            name = "run_hotconsole_"
+            name += MAIN_NAME.split(".")[0] + ".bat" if title == DEFAULT_TITLE else f"{title.lower()}.bat"
+            bat_path = os.path.join(startup_path, name)
             if os.path.exists(bat_path):
                 config.refuseStartup = True
                 config.dump()
@@ -297,7 +301,7 @@ class Init:
             option_number = CommandHelpers.ask_option_number_from_one(["Да", "Нет"], message)
             if option_number == 1:
                 with open(bat_path, "w+", encoding="utf-8") as file:
-                    file.write(r'start "" "%s"' % os.path.join(SCRIPTS_PATH, "main.py"))
+                    file.write(r'start "" "%s"' % os.path.join(SCRIPTS_PATH, MAIN_NAME))
                 print("\nСкрипты успешно добавлены в автозагрузку")
         except Exception:
             print("\n\nНе удалось добавить батник для автозапуска скриптов в папку Автозагрузка\n\n")
@@ -322,7 +326,7 @@ class Runner:
         self,
         init_config: Config = Config(version=1, consoleMode=False, refuseStartup=False),
         config_actualizer: Callable | None = None,
-        title: str = "Hotconsole Scripts",
+        title: str = DEFAULT_TITLE,
         migrations: list[Callable] = [],
     ):
         if config_actualizer is not None:
@@ -330,7 +334,7 @@ class Runner:
         if title is not None:
             OSHelper.set_title(title)
         Init.init_or_update_config(init_config, migrations)
-        Init.add_to_startup()
+        Init.add_to_startup(title)
 
     def run(self, hotkeys: list[Hotkey], hotstrings: list[Hotstring] | None = None):
         """Приложение запускается в режиме горячих клавиш по умолчанию,
