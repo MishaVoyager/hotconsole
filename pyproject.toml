@@ -4,9 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hotconsole"
-version = "0.1.5"
+version = "0.1.8"
 authors = [
-  { name="Michael Noskov", email="vecheren@gmail.com" },
+  { name = "Michael Noskov", email = "vecheren@gmail.com" },
 ]
 description = "Provides an easy way to run your scripts by console commands and hotkeys"
 keywords = ["hotkeys", "terminal", "console", "hotstrings", "commands", "scripts"]
@@ -32,6 +32,7 @@ dependencies = [
   "Pillow>=9.5.0",
   "pylibdmtx>=0.1.10"
 ]
+license-files = { paths = ["LICENSE.md"] }
 
 [project.urls]
 Homepage = "https://github.com/Vecheren/hotconsole"

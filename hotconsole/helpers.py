@@ -103,8 +103,9 @@ cd /d "%~dp0" && ( if exist "%temp%\getadmin.vbs" del "%temp%\getadmin.vbs" ) &&
         """
         bat = f"""{OSHelper.get_vbs_script_for_admin_rights()}
 python -m ensurepip
-python -m pip install hotconsole
+python -m pip install --upgrade hotconsole
 python -m pip install -r "requirements.txt"
+python -m pip show -v hotconsole
 @echo off
 set /p userInput=Please, check if libraries succesfully installed"""
         folder_path = os.path.join(folder_path, bat_name)
