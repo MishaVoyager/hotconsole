@@ -86,6 +86,8 @@ Hotstring - это как горячая клавиша, но только дл�
 
 from hotconsole.commands import *
 from hotconsole.helpers import *
+import ansicon
 
 OSHelper.rerun_as_admin()
 OSHelper.set_english_layout()
+ansicon.load()
