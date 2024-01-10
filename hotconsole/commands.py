@@ -22,6 +22,7 @@ import json
 import keyboard
 import getpass
 from pydantic import BaseModel, ConfigDict, ValidationError, PositiveInt
+from console import fg, bg
 from hotconsole.helpers import OSHelper
 
 
@@ -171,12 +172,14 @@ class CommandHelpers:
     @classmethod
     def print_error(cls, message: str = "При выполнении скрипта возникла ошибка, попробуйте снова"):
         """Печатает текст ошибки на красном фоне"""
-        print(f'\n\033[0;30;41m {message} \033[0;0;0m\n\n')
+        print((bg.lightred + fg.black)(f"\n{message}\n\n"))
+        # print(f'\n\033[0;30;41m {message} \033[0;0;0m\n\n')
 
     @classmethod
     def print_success(cls, message: str = "Скрипт завершился успешно"):
         """Печатает текст успеха на зеленом фоне"""
-        print(f'\n\033[0;30;42m {message} \033[0;0;0m\n\n')
+        print((bg.green + fg.black)(f"\n{message}\n\n"))
+        # print(f'\n\033[0;30;42m {message} \033[0;0;0m\n\n')
 
 
 class Executor:
