@@ -14,12 +14,10 @@ import sqlite3
 import sys
 import time
 import subprocess
-import ctypes
 from dataclasses import dataclass, field
 from typing import Callable
 import collections
 import requests
-from console import fg, bg
 import json
 import keyboard
 import getpass
@@ -97,6 +95,9 @@ class Command:
     def __post_init__(self):
         if self.options_message == "":
             self.options_message = "Введите номер варианта"
+    
+    def __str__(self):
+        return f"Название команды: {self.name}, описание: {self.description}"
 
 
 class CommandHelpers:
@@ -170,12 +171,12 @@ class CommandHelpers:
     @classmethod
     def print_error(cls, message: str = "При выполнении скрипта возникла ошибка, попробуйте снова"):
         """Печатает текст ошибки на красном фоне"""
-        print((bg.lightred + fg.black)(f"\n{message}\n\n"))
+        print(f'\n\033[0;30;41m {message} \033[0;0;0m\n\n')
 
     @classmethod
     def print_success(cls, message: str = "Скрипт завершился успешно"):
         """Печатает текст успеха на зеленом фоне"""
-        print((bg.green + fg.black)(f"\n{message}\n\n"))
+        print(f'\n\033[0;30;42m {message} \033[0;0;0m\n\n')
 
 
 class Executor:
@@ -242,7 +243,7 @@ class Init:
         new_config.dump()
         CommandHelpers.print_success("Файл data.json успешно обновлен")
         input("Для продолжения нажмите Enter...\n")
-        OSHelper.rerun_app_as_admin()
+        OSHelper.rerun_as_admin()
 
     @classmethod
     def _should_init(cls):
@@ -275,6 +276,7 @@ class Init:
 
     @classmethod
     def migrate_if_needed(cls, init_config: Config, migrations: list[Callable]):
+        """Если в Runner переданы миграции, запускает их, затем удаляет лишние поля"""
         if len(migrations) == 0:
             return
         if Config.is_corrupted() or cls._should_update(init_config):
@@ -364,7 +366,7 @@ class Runner:
             self.print_commands(commands)
             args = input().strip().split()
             if args[0] == "exit":
-                OSHelper.rerun_app_as_admin()
+                OSHelper.rerun_as_admin()
             try:
                 if len(args) == 1:
                     Executor.try_execute(commands_names[args[0]])
@@ -413,10 +415,9 @@ class Runner:
     def restart_after_lock(self):
         """При блокировке экрана скрипты перестают работать, но они автоматически перезапускаются"""
         while not self.is_screen_locked():
-            time.sleep(5)
+            time.sleep(20)
         while True:
-            time.sleep(1)
+            time.sleep(5)
             if not self.is_screen_locked():
                 print("Перезапуск после блокировки...\n")
-                ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-                sys.exit()
+                OSHelper.rerun_as_admin(True)

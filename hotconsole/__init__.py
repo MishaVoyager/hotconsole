@@ -83,3 +83,9 @@ Hotstring - это как горячая клавиша, но только дл�
 
 Работает это так: пишем githot, нажимаем пробел - вместо githot в нашем случае подставляется ссылка.
 """
+
+from hotconsole.commands import *
+from hotconsole.helpers import *
+
+OSHelper.rerun_as_admin()
+OSHelper.set_english_layout()

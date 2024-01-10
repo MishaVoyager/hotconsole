@@ -1,5 +1,4 @@
-from hotconsole.helpers import OSHelper
-from hotconsole.commands import Command, Runner, Hotkey
+from hotconsole import Command, Runner, Hotkey, OSHelper
 
 
 def turn_service(option_number):
@@ -34,6 +33,6 @@ def main():
 
 
 if __name__ == "__main__":
-    OSHelper.rerun_app_as_admin()
+    OSHelper.rerun_as_admin()
     OSHelper.set_english_layout()
     main()

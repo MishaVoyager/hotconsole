@@ -85,9 +85,9 @@ class OSHelper:
         win32api.LoadKeyboardLayout("00000409", 1)
 
     @staticmethod
-    def rerun_app_as_admin():
+    def rerun_as_admin(evenIfUserIsAdmin: bool = False):
         """Перезпускает текущий скрипт из-под админа"""
-        if not ctypes.windll.shell32.IsUserAnAdmin():
+        if not ctypes.windll.shell32.IsUserAnAdmin() or evenIfUserIsAdmin:
             ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
             sys.exit()
 
