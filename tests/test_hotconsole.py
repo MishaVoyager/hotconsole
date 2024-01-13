@@ -3,8 +3,8 @@ import json
 import sqlite3
 from unittest import mock
 import pytest
+from hotconsole import hotconsole
 from hotconsole.helpers import MarkHelper, MarkType, InnGenerator, DBHelper, OSHelper
-from hotconsole import commands
 
 
 class TestOSHelper:
@@ -99,17 +99,17 @@ class TestDBHelper:
 class TestCommandHelpers:
     @mock.patch("builtins.print")
     def test_print_one_option(self, mock_print: mock.MagicMock):
-        commands.CommandHelpers.print_options(["Опция"])
+        hotconsole.CommandHelpers.print_options(["Опция"])
         mock_print.assert_called_with("1. Опция")
 
     @mock.patch("builtins.print")
     def test_print_few_options(self, mock_print: mock.MagicMock):
-        commands.CommandHelpers.print_options(["Опция1", "Опция2"])
+        hotconsole.CommandHelpers.print_options(["Опция1", "Опция2"])
         mock_print.assert_has_calls([mock.call("1. Опция1"), mock.call("2. Опция2")], any_order=False)
 
     @mock.patch("builtins.print")
     def test_print_tuple_options(self, mock_print: mock.MagicMock):
-        commands.CommandHelpers.print_options_tuple([("Ключ1", "Значение1"), ("Ключ2", "Значение2")])
+        hotconsole.CommandHelpers.print_options_tuple([("Ключ1", "Значение1"), ("Ключ2", "Значение2")])
         mock_print.assert_has_calls([mock.call("1. Значение1"), mock.call("2. Значение2")], any_order=False)
 
 
@@ -152,11 +152,11 @@ class TestMarkHelper:
 
 class TestIni:
     def test_get_updated_config(self, monkeypatch: pytest.MonkeyPatch):
-        current_config = commands.Config(
+        current_config = hotconsole.Config(
             version=1, consoleMode=False, refuseStartup=False, firstLegalEntity="", inn2UL="6699000000"
         )
 
-        init_config = commands.Config(
+        init_config = hotconsole.Config(
             version=2,
             consoleMode=True,
             refuseStartup=True,
@@ -165,8 +165,8 @@ class TestIni:
             new_field="new_string",
         )
 
-        monkeypatch.setattr(commands.Config, "load_dict", lambda: current_config.model_dump())
-        assert commands.Init.add_new_fields(init_config) == commands.Config(
+        monkeypatch.setattr(hotconsole.Config, "load_dict", lambda: current_config.model_dump())
+        assert hotconsole.Init.add_new_fields(init_config) == hotconsole.Config(
             version=2,
             consoleMode=False,
             refuseStartup=False,

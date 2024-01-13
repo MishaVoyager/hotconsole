@@ -303,7 +303,7 @@ class Init:
             option_number = CommandHelpers.ask_option_number_from_one(["Да", "Нет"], message)
             if option_number == 1:
                 with open(bat_path, "w+", encoding="utf-8") as file:
-                    file.write(r'start "" "%s"' % os.path.join(SCRIPTS_PATH, MAIN_NAME))
+                    file.write(f"@python \"{os.path.join(SCRIPTS_PATH, MAIN_NAME)}\"")
                 print("\nСкрипты успешно добавлены в автозагрузку")
         except Exception:
             print("\n\nНе удалось добавить батник для автозапуска скриптов в папку Автозагрузка\n\n")

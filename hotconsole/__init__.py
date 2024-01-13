@@ -77,15 +77,14 @@ def migration_to_22():
 
 **Hotstrings**
 
-Hotstring - это как горячая клавиша, но только для строк. 
+Hotstring - это как горячая клавиша, но только для строк.
 Например, мы можем создать Hotstring("githot", "Гитхаб hotconsole", "https://github.com/Vecheren/hotconsole")
 И передать массив таких объектов в метод run.
 
 Работает это так: пишем githot, нажимаем пробел - вместо githot в нашем случае подставляется ссылка.
 """
 
-from hotconsole.commands import *
-from hotconsole.helpers import *
+from hotconsole.helpers import OSHelper
 import ansicon
 
 OSHelper.rerun_as_admin()

@@ -1,4 +1,5 @@
-from hotconsole import Command, Runner, Hotkey, OSHelper
+from hotconsole.hotconsole import Command, Runner, Hotkey
+from hotconsole.helpers import OSHelper
 
 
 def turn_service(option_number):
