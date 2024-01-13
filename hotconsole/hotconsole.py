@@ -406,6 +406,10 @@ class Runner:
         title: str = DEFAULT_TITLE,
         migrations: list[Callable] = [],
     ):
+        self.init_config = init_config
+        self.config_actualizer = config_actualizer
+        self.title = title
+        self.migrations = migrations
         if config_actualizer is not None:
             Config.actualize = config_actualizer
         if title is not None:
@@ -448,9 +452,9 @@ class Runner:
         while True:
             self.print_commands(commands)
             args = input().strip().split()
-            if args[0] == "exit":
-                OSHelper.rerun_as_admin()
             try:
+                if args[0] == 'exit':
+                    OSHelper.rerun_as_admin(True)
                 if len(args) == 1:
                     Executor.try_execute(commands_names[args[0]])
                 elif len(args) == 2:
@@ -461,6 +465,9 @@ class Runner:
                 CommandHelpers.print_error("Команда не найдена")
             except ValueError:
                 CommandHelpers.print_error("Номер опции должен быть числом")
+            except SystemExit:
+                OSHelper.close_window(self.title)
+                sys.exit()
 
     def add_hotkey(self, key: str, command: Command, option_number: int):
         """Добавляем горячую клавишу на команду с определенными параметрами"""

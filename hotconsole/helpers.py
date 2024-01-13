@@ -101,6 +101,12 @@ class OSHelper:
             sys.exit()
 
     @staticmethod
+    def close_window(title: str):
+        """Закрывает окно, которое находит по заголовку"""
+        hwnd = win32gui.FindWindow(None, title)
+        win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
+
+    @staticmethod
     def get_vbs_script_for_admin_rights() -> str:
         return """set "params=%*"
 cd /d "%~dp0" && ( if exist "%temp%\getadmin.vbs" del "%temp%\getadmin.vbs" ) && fsutil dirty query %systemdrive% 1>nul 2>nul || (  echo Set UAC = CreateObject^("Shell.Application"^) : UAC.ShellExecute "cmd.exe", "/k cd ""%~sdp0"" && ""%~s0"" %params%", "", "runas", 1 >> "%temp%\getadmin.vbs" && "%temp%\getadmin.vbs" && exit /B )"""
