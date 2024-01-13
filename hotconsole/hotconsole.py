@@ -1,11 +1,36 @@
 """
-Основной модуль библиотеки hotcomands - для инициализации, запуска скриптов и обработки команд.
-Содержание:
-Command - датакласс, на основе которого вы создаете команды
-CommandHelpers - полезные методы, например, для запроса номера опции
-Runner - запускает приложение
-Init - инициализирует, например, создает или обновляет конфиг
-Config - класс для конфига пользователя, который создается в папке запуска команд в файле data.json
+Основной модуль библиотеки hotconsole - для инициализации, запуска скриптов и обработки команд.
+
+Classes
+-------
+
+Command
+    Датакласс, на основе которого создаются команды
+CommandHelpers
+    Полезные методы для команд, например, для запроса номера опции
+Config
+    Конфиг пользователя, который создается в файле data.json
+Runner
+    Запускает приложение - для этого надо создать объект и вызывать метод run()
+Init
+    Инициализирует, например, создает или обновляет конфиг (не надо вызывать напрямую)
+Executor
+    Выполняет команды, обрабатывает ошибки
+Hotkey
+    Именованный кортеж: горячая клавиша, команда и номер опции
+Hotstring
+    Именнованный кортеж: короткая строка, описание, полная строка
+
+Constants
+---------
+SCRIPTS_PATH
+    Адрес папки со скриптами пользователя
+CONFIG_PATH
+    Адрес пользовательского конфига data.json
+MAIN_NAME
+    Название файла, из которого пользователь запускает скрипты
+DEFAULT_TITLE
+    Заголовок в консоли по умолчанию
 """
 
 import os
@@ -34,6 +59,17 @@ Hotstring = collections.namedtuple("Hotstring", ["abbreviation", "description", 
 
 
 class Config(BaseModel):
+    """Пользовательский конфиг - хранит информацию и позволяет кастомизировать приложение
+
+    Parameters
+    ----------
+    version: PositiveInt
+        Версия конфига
+    consoleMode: bool
+        Если true - скрипты запускаются в консольном режиме без горячих клавиш
+    refuseStartup: bool
+        Если true - приложение не предлагает добавить запуск в автозагрузку
+    """
     model_config = ConfigDict(extra="allow")
 
     version: PositiveInt
@@ -41,22 +77,27 @@ class Config(BaseModel):
     refuseStartup: bool
 
     def dump(self):
+        """Перезаписывает фактический конфиг"""
         OSHelper.write_file(CONFIG_PATH, self.model_dump_json(indent=4))
 
     @staticmethod
     def load_config():
+        """Получает фактический конфиг в виде конфига"""
         return Config(**OSHelper.extract_whole_json(CONFIG_PATH))
 
     @staticmethod
     def load_dict() -> dict:
+        """Получает фактический конфиг в виде словаря"""
         return Config(**OSHelper.extract_whole_json(CONFIG_PATH)).load_config().model_dump()
 
     @staticmethod
     def load_string() -> str:
+        """Получает фактический конфиг в текстовом виде"""
         return Config(**OSHelper.extract_whole_json(CONFIG_PATH)).load_config().model_dump_json(indent=4)
 
     @staticmethod
     def is_corrupted() -> bool:
+        """Соответствует ли фактический конфиг модели"""
         try:
             Config.load_config()
             return False
@@ -65,6 +106,7 @@ class Config(BaseModel):
 
     @staticmethod
     def actualize():
+        """Актуализирует конфиг при каждом запуске команды"""
         pass
 
 
@@ -74,16 +116,16 @@ class Command:
 
     Parameters
     ------------
-        name: str
-            Короткое название команды используется в консольном режиме
-        description: str
-            Объяснение, что можно сделать при помощи команды - отображается при ошибках
-        execute: Callable
-            Собственно команда
-        options: list[str]
-            Номер опции запрашиваем у пользователя перед выполнением команды
-        options_message: str
-            Фраза, с которой запрашиваем номер опции
+    name: str
+        Короткое название команды используется в консольном режиме
+    description: str
+        Объяснение, что можно сделать при помощи команды - отображается при ошибках
+    execute: Callable
+        Собственно команда
+    options: list[str]
+        Номер опции запрашиваем у пользователя перед выполнением команды
+    options_message: str
+        Фраза, с которой запрашиваем номер опции
     """
 
     name: str
@@ -217,6 +259,7 @@ class Executor:
 
 
 class Init:
+    """Класс инициализации, который используется раннером"""
 
     @classmethod
     def init_or_update_config(cls, init_config: Config, migrations: list[Callable] = []):
@@ -324,6 +367,38 @@ class Init:
 
 
 class Runner:
+    """Инициализирует, запускает и выполняет приложение со скриптами
+
+    Parameters
+    ------------
+    init_config: Config
+        Пользовательский конфиг, по умолчанию с полями version, consoleMode, refuseStartup
+    config_actualizer: Callable | None
+        Актуализатор конфига срабатывает при выполнении каждой команды, по умолчанию pass
+    title: str
+        Название окошка консоли со скриптами, по умолчанию Hotconsole Scripts
+    migrations: list[Callable]
+        Миграции для безболезненного обновления конфига ваших пользователей, по умолчанию пустой список
+
+    Methods
+    ------------
+    run(hotkeys: list[Hotkey], hotstrings: list[Hotstring] | None = None)
+        Единственная функция, которую надо использовать напрямую, запускает приложение
+    console_mode(hotkeys: list[Hotkey])
+        Запускает приложение в консольном режиме, без горячих клавиш
+    def add_hotkey(key: str, command: Command, option_number: int)
+        Привязывает горячую клавишу к выполнению команды через Executor
+    add_hotstring(short_string: str, string: str)
+        Добавляет горячую строку
+    print_hotkeys(hotkeys: list[Hotkey])
+        Выводит список горячих клавиш    
+    print_commands(commands: list[Command])
+        Выводит список команд в консольном режиме
+    is_screen_locked()
+        Проверяет, заблокирован ли экран
+    restart_after_lock
+        Перезапускает приложение после блокировки экрана (иначе горячие клавиши перестанут работать)
+    """
     def __init__(
         self,
         init_config: Config = Config(version=1, consoleMode=False, refuseStartup=False),
@@ -341,6 +416,14 @@ class Runner:
     def run(self, hotkeys: list[Hotkey], hotstrings: list[Hotstring] | None = None):
         """Приложение запускается в режиме горячих клавиш по умолчанию,
         а если в конфиге consoleMode = false, то в режиме консольных команд
+
+        Parameters
+        ------------
+            hotkeys: list[Hotkey]
+                Список горячих клавиш для запуска команд
+            hotstrings: list[Hotstring] | None
+                Список горячих строк для автозамены строк
+            add_hotkey
         """
         CommandHelpers.print_success("Горячие клавиши готовы!")
         for hotkey in hotkeys:
