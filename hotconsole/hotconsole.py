@@ -226,6 +226,7 @@ class Executor:
 
     @classmethod
     def try_execute(cls, command: Command, option_number: int | None = None):
+        keyboard.stash_state()
         try:
             config = Config(**OSHelper.extract_whole_json(CONFIG_PATH))
             config.actualize()
@@ -247,6 +248,9 @@ class Executor:
             cls.print_exception(command, "\nНе удалось подключиться к базе данных db.db\n")
         except Exception:
             cls.print_exception(command)
+        finally:
+            keyboard.stash_state()
+
 
     @classmethod
     def print_exception(cls, command: Command, message: str = ""):
@@ -427,7 +431,6 @@ class Runner:
                 Список горячих клавиш для запуска команд
             hotstrings: list[Hotstring] | None
                 Список горячих строк для автозамены строк
-            add_hotkey
         """
         CommandHelpers.print_success("Горячие клавиши готовы!")
         for hotkey in hotkeys:
@@ -446,12 +449,15 @@ class Runner:
 
     def console_mode(self, hotkeys: list[Hotkey]):
         """Запускаем скрипты в консольном режиме, без горячих клавиш"""
+        OSHelper.clean_console_input()
         CommandHelpers.print_success("Консольные команды ждут вас!")
         commands: list[Command] = [hotkey.command for hotkey in hotkeys]
         commands_names = {command.name: command for command in commands}
         while True:
             self.print_commands(commands)
             args = input().strip().split()
+            if len(args) == 0:
+                continue
             try:
                 if args[0] == 'exit':
                     OSHelper.rerun_as_admin(True)
@@ -465,9 +471,6 @@ class Runner:
                 CommandHelpers.print_error("Команда не найдена")
             except ValueError:
                 CommandHelpers.print_error("Номер опции должен быть числом")
-            except SystemExit:
-                OSHelper.close_window(self.title)
-                sys.exit()
 
     def add_hotkey(self, key: str, command: Command, option_number: int):
         """Добавляем горячую клавишу на команду с определенными параметрами"""
@@ -481,10 +484,12 @@ class Runner:
         """Выводим список горячих клавиш в режиме горячих клавиш"""
         table_style = "{0:<8} \t{1:<40} \t{2:20}"
         print(table_style.format("Комбо", "Описание команды", "Номер опции"))
+        print()
         for hotkey in hotkeys:
             print(table_style.format(hotkey.keyboard_key, hotkey.command.description, hotkey.option_number or ""))
         print(table_style.format("alt+h", "Вывести список горячих клавиш в консоль", ""))
-        print(table_style.format("\nalt+q", "Переключиться на консольный режим", ""))
+        print()
+        print(table_style.format("alt+q", "Переключиться на консольный режим", ""))
         print()
 
     def print_commands(self, commands: list[Command]):
@@ -505,9 +510,9 @@ class Runner:
     def restart_after_lock(self):
         """При блокировке экрана скрипты перестают работать, но они автоматически перезапускаются"""
         while not self.is_screen_locked():
-            time.sleep(20)
+            time.sleep(15)
         while True:
-            time.sleep(5)
+            time.sleep(2)
             if not self.is_screen_locked():
                 print("Перезапуск после блокировки...\n")
                 OSHelper.rerun_as_admin(True)

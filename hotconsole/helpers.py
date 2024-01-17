@@ -98,7 +98,7 @@ class OSHelper:
         """Перезпускает текущий скрипт из-под админа"""
         if not ctypes.windll.shell32.IsUserAnAdmin() or evenIfUserIsAdmin:
             ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-            sys.exit()
+            os._exit(1)
 
     @staticmethod
     def close_window(title: str):
