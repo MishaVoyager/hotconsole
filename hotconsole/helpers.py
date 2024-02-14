@@ -425,24 +425,21 @@ class MarkHelper:
         time.sleep(0.02)
 
     @classmethod
-    def format_mark(cls, mark) -> list:
+    def format_mark(cls, mark: str) -> list:
         """Превращает марку в массив строк, между которыми сканер должен вставлять GS-символ"""
         result = []
-        mark = "".join(re.split(r"\\u001d|", mark))
-        index1 = mark.rfind("93", 20, 32)
-        index2 = mark.rfind("3103", max(20, index1), 40)
-        if index1 != -1 and index2 != -1:
-            result.append(mark[0:index1])
-            result.append(mark[index1:index2])
-            result.append(mark[index2:])
-        elif index1 == -1 and index2 != -1:
-            result.append(mark[0:index2])
-            result.append(mark[index2:])
-        elif index1 != -1 and index2 == -1:
-            result.append(mark[0:index1])
-            result.append(mark[index1:])
-        elif index1 == -1 and index2 == -1:
-            result.append(mark)
+        mark = "".join(re.split(r"\\u001d||\r\n", mark))
+        groups_with_GS_before = ["93", "3103", "8005"]
+        GS_positions = [mark.rfind(group, 20, 40) for group in groups_with_GS_before]
+        GS_positions = sorted([pos for pos in GS_positions if pos != -1])
+        if len(GS_positions) == 0:
+            return [mark]
+        for i in range(len(GS_positions)):
+            if i == 0:
+                result.append(mark[:GS_positions[i]])
+            else:
+                result.append(mark[GS_positions[i - 1]:GS_positions[i]])
+        result.append(mark[GS_positions[-1]:])
         return result
 
     @classmethod
