@@ -1,8 +1,10 @@
-import os
 import json
+import os
 import sqlite3
 from unittest import mock
+
 import pytest
+
 from hotconsole import hotconsole
 from hotconsole.helpers import MarkHelper, MarkType, InnGenerator, DBHelper, OSHelper
 
@@ -38,7 +40,7 @@ class TestDBHelper:
 
     @mock.patch("sqlite3.connect")
     def test_connect_and_execute_query_select_success(
-        self, mock_connect: mock.MagicMock, monkeypatch: pytest.MonkeyPatch
+            self, mock_connect: mock.MagicMock, monkeypatch: pytest.MonkeyPatch
     ):
         monkeypatch.setattr("os.path.exists", lambda _: True)
 
@@ -58,7 +60,7 @@ class TestDBHelper:
 
     @mock.patch("sqlite3.connect")
     def test_connect_and_execute_query_update_success(
-        self, mock_connect: mock.MagicMock, monkeypatch: pytest.MonkeyPatch
+            self, mock_connect: mock.MagicMock, monkeypatch: pytest.MonkeyPatch
     ):
         monkeypatch.setattr("os.path.exists", lambda _: True)
 
@@ -148,6 +150,41 @@ class TestMarkHelper:
         mark = MarkHelper.gen_mark(MarkType.MILK)
         assert "3103" not in mark
         assert mark[-6:] != "000000"
+
+    @pytest.mark.parametrize(
+        "mark, splitted_mark",
+        [
+            (
+                r"010210000000008121mmykmz\u001d93TrJ1\u001d3103005678",
+                ["010210000000008121mmykmz", "93TrJ1", "3103005678"]
+            ),
+            (
+                r"010210000000008121mmykmz93TrJ13103005678",
+                ["010210000000008121mmykmz", "93TrJ1", "3103005678"]
+            ),
+            (
+                r"04606203086627-UWzSA8AABUptys",
+                ["04606203086627-UWzSA8AABUptys"]
+            ),
+            (
+                r"(01)03221424250793(21)Xz&NASDPoeBd&0000000(91)8039(92)f4+32XYI/05BpU41ug3v1J8+t/9oaAutrfUzgVBWsQ==",
+                ["(01)03221424250793(21)Xz&NASDPoeBd&0000000(91)8039(92)f4+32XYI/05BpU41ug3v1J8+t/9oaAutrfUzgVBWsQ=="]
+            ),
+            (
+                r"01030410947877712152TZW&93cAce31031234567",
+                ["01030410947877712152TZW&", "93cAce", "31031234567"]
+            ),
+            (
+                r"RU-430302-ABC0686893",
+                ["RU-430302-ABC0686893"]
+            ),
+            (
+                r"3595193310382",
+                ["3595193310382"]
+            )
+        ])
+    def test_format_mark(self, mark, splitted_mark):
+        assert MarkHelper.format_mark(mark) == splitted_mark
 
 
 class TestIni:

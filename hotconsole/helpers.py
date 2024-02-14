@@ -425,38 +425,40 @@ class MarkHelper:
         time.sleep(0.02)
 
     @classmethod
+    def format_mark(cls, mark) -> list:
+        """Превращает марку в массив строк, между которыми сканер должен вставлять GS-символ"""
+        result = []
+        mark = "".join(re.split(r"\\u001d|", mark))
+        index1 = mark.rfind("93", 20, 32)
+        index2 = mark.rfind("3103", max(20, index1), 40)
+        if index1 != -1 and index2 != -1:
+            result.append(mark[0:index1])
+            result.append(mark[index1:index2])
+            result.append(mark[index2:])
+        elif index1 == -1 and index2 != -1:
+            result.append(mark[0:index2])
+            result.append(mark[index2:])
+        elif index1 != -1 and index2 == -1:
+            result.append(mark[0:index1])
+            result.append(mark[index1:])
+        elif index1 == -1 and index2 == -1:
+            result.append(mark)
+        return result
+
+
+    @classmethod
     def paste_mark_in_scanner_mode(cls, mark: str, product_type: MarkType):
         """Вставляем марку и, если в ней есть 93 или 3103 - вставляем GS-символ перед ними"""
-
-        if product_type in (MarkType.FURS, MarkType.BARCODE, MarkType.EXCISE):
+        if product_type == MarkType.EXCISE:
             cls.paste_from_keyboard(mark)
             print(f"\nМарка: {mark}\n")
-            return
-        splitted_mark = re.split("93|3103", mark)
-        if len(splitted_mark) > 3:
-            print("\nНе удалось вставить в марку GS-символы: слишком много групп 93 и 3103\n")
-            cls.paste_from_keyboard(mark)
-            print(f"\nМарка: {mark}\n")
-            return
-        cls.paste_from_keyboard(splitted_mark[0])
-        if len(splitted_mark) > 1:
-            cls.paste_GS()
-            cls.paste_from_keyboard("93")
-            cls.paste_from_keyboard(splitted_mark[1])
-        if len(splitted_mark) > 2:
-            cls.paste_GS()
-            cls.paste_from_keyboard("3103")
-            cls.paste_from_keyboard(splitted_mark[2])
-
-        readable_mark = str(mark)
-        readable_mark = readable_mark.replace("93", cls.GSAsString + "93")
-        readable_mark = readable_mark.replace("3103", cls.GSAsString + "3103")
-        print(f"\nМарка: \n{readable_mark}\n")
-
-        mark = mark.replace("93", cls.GS + "93")
-        mark = mark.replace("3103", cls.GS + "3103")
-        pyperclip.copy(mark)
-        print("Марка с GS-символами - в вашем буфере обмена")
+            return mark
+        splitted_mark = cls.format_mark(mark)
+        for index, part in enumerate(splitted_mark):
+            if index != 0:
+                cls.paste_GS()
+            cls.paste_from_keyboard(part)
+        return ''.join(splitted_mark)
 
     @classmethod
     def gen_mark(cls, product_type: MarkType, barcode: str = "2100000000463") -> str:
