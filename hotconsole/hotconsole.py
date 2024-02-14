@@ -33,22 +33,23 @@ DEFAULT_TITLE
     Заголовок в консоли по умолчанию
 """
 
+import collections
+import getpass
+import json
 import os
-import traceback
 import sqlite3
+import subprocess
 import sys
 import time
-import subprocess
+import traceback
 from dataclasses import dataclass, field
 from typing import Callable
-import collections
-import requests
-import json
-import keyboard
-import getpass
-from pydantic import BaseModel, ConfigDict, ValidationError, PositiveInt
-from hotconsole.helpers import OSHelper
 
+import keyboard
+import requests
+from pydantic import BaseModel, ConfigDict, ValidationError, PositiveInt
+
+from hotconsole.helpers import OSHelper
 
 SCRIPTS_PATH = sys.path[0]
 CONFIG_PATH = os.path.join(SCRIPTS_PATH, "data.json")
@@ -137,7 +138,7 @@ class Command:
     def __post_init__(self):
         if self.options_message == "":
             self.options_message = "Введите номер варианта"
-    
+
     def __str__(self):
         return f"Название команды: {self.name}, описание: {self.description}"
 
@@ -177,13 +178,13 @@ class CommandHelpers:
     def print_options(cls, options: list):
         """Пронумеровать и вывести в консоль список опций"""
         for index, name in enumerate(options):
-            print(f"{str(index+1)}. {name}")
+            print(f"{str(index + 1)}. {name}")
 
     @classmethod
     def print_options_tuple(cls, options: list):
         """Пронумеровать и вывести в консоль список опций - вторых элементов кортежа"""
         for index, (_, name) in enumerate(options):
-            print(f"{str(index+1)}. {name}")
+            print(f"{str(index + 1)}. {name}")
 
     @classmethod
     def ask_value_for_config(cls, key: str, message: str = "Вы еще не прописали этот параметр в конфиге") -> str:
@@ -250,7 +251,6 @@ class Executor:
             cls.print_exception(command)
         finally:
             keyboard.stash_state()
-
 
     @classmethod
     def print_exception(cls, command: Command, message: str = ""):
@@ -403,12 +403,13 @@ class Runner:
     restart_after_lock
         Перезапускает приложение после блокировки экрана (иначе горячие клавиши перестанут работать)
     """
+
     def __init__(
-        self,
-        init_config: Config = Config(version=1, consoleMode=False, refuseStartup=False),
-        config_actualizer: Callable | None = None,
-        title: str = DEFAULT_TITLE,
-        migrations: list[Callable] = [],
+            self,
+            init_config: Config = Config(version=1, consoleMode=False, refuseStartup=False),
+            config_actualizer: Callable | None = None,
+            title: str = DEFAULT_TITLE,
+            migrations: list[Callable] = [],
     ):
         self.init_config = init_config
         self.config_actualizer = config_actualizer

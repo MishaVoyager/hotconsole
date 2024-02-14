@@ -17,26 +17,26 @@ MarkHelper
     Для генерации марок
 """
 
-import win32api
-import os
-import sys
 import ctypes
-import traceback
-import shutil
 import json
-import subprocess
-import sqlite3
-import time
+import os
 import random
-import string
-from enum import Enum
 import re
+import shutil
+import sqlite3
+import string
+import subprocess
+import sys
+import time
+import traceback
+from enum import Enum
+
 import keyboard
-import win32gui
-import win32con
-from PIL import Image
-import pyperclip
 import requests
+import win32api
+import win32con
+import win32gui
+from PIL import Image
 
 
 class DBHelper:
@@ -94,9 +94,9 @@ class OSHelper:
         win32api.LoadKeyboardLayout("00000409", 1)
 
     @staticmethod
-    def rerun_as_admin(evenIfUserIsAdmin: bool = False):
+    def rerun_as_admin(even_if_admin: bool = False):
         """Перезпускает текущий скрипт из-под админа"""
-        if not ctypes.windll.shell32.IsUserAnAdmin() or evenIfUserIsAdmin:
+        if not ctypes.windll.shell32.IsUserAnAdmin() or even_if_admin:
             ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
             os._exit(1)
 
@@ -236,12 +236,12 @@ set /p userInput=Please, check if libraries succesfully installed"""
     @staticmethod
     def gen_random_string(length: int) -> str:
         letters = string.ascii_lowercase
-        return "".join(random.choice(letters) for i in range(length))
+        return "".join(random.choice(letters) for _ in range(length))
 
     @staticmethod
     def get_random_numbers(length: int) -> str:
         digits = string.digits
-        return "".join(random.choice(digits) for i in range(length))
+        return "".join(random.choice(digits) for _ in range(length))
 
     @staticmethod
     def flash_window(title: str):
@@ -444,7 +444,6 @@ class MarkHelper:
         elif index1 == -1 and index2 == -1:
             result.append(mark)
         return result
-
 
     @classmethod
     def paste_mark_in_scanner_mode(cls, mark: str, product_type: MarkType):

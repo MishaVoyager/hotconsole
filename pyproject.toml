@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hotconsole"
-version = "0.3.0"
+version = "0.3.2"
 authors = [
   { name = "Michael Noskov", email = "vecheren@gmail.com" },
 ]
