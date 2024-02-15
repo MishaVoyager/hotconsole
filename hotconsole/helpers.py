@@ -391,17 +391,19 @@ class InnGenerator:
         return num if num != "10" else "0"
 
 
-class MarkType(Enum):
+class MarkType(str, Enum):
     """Типы маркировки"""
 
-    EXCISE = 1
-    TABAK = 2
-    CIS = 3
-    WATER = 4
-    MILK = 5
-    FURS = 6
-    BEER = 7
-    BARCODE = 8
+    EXCISE = "Алкоголь"
+    TABAK = "Сигареты"
+    CIS = "Шины, духи, одежда, обувь, фото"
+    WATER = "Вода"
+    MILK = "Молоко"
+    FURS = "Шубы"
+    BEER = "Пиво"
+    ANTICEPTIC = "БАДы и антисептики"
+    BARCODE = "Штрихкод"
+
 
 
 class MarkHelper:
@@ -410,6 +412,10 @@ class MarkHelper:
     ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"%&'*+-./_,:;=<>?"
     GSAsString = r"\u001d"
     GS = chr(29)
+
+    @classmethod
+    def mark_types_values(cls):
+        return [i.value for i in MarkType]
 
     @classmethod
     def paste_from_keyboard(cls, text: str):
@@ -429,7 +435,7 @@ class MarkHelper:
         """Превращает марку в массив строк, между которыми сканер должен вставлять GS-символ"""
         result = []
         mark = "".join(re.split(r"\\u001d||\r\n", mark))
-        groups_with_GS_before = ["93", "3103", "8005"]
+        groups_with_GS_before = ["91", "92", "93", "3103", "8005"]
         GS_positions = [mark.rfind(group, 20, 40) for group in groups_with_GS_before]
         GS_positions = sorted([pos for pos in GS_positions if pos != -1])
         if len(GS_positions) == 0:
@@ -443,11 +449,10 @@ class MarkHelper:
         return result
 
     @classmethod
-    def paste_mark_in_scanner_mode(cls, mark: str, product_type: MarkType):
-        """Вставляем марку и, если в ней есть 93 или 3103 - вставляем GS-символ перед ними"""
+    def paste_mark_in_scanner_mode(cls, mark: str, product_type: MarkType) -> str:
+        """Вставляем марку с GS-символами в нужных местах"""
         if product_type == MarkType.EXCISE:
             cls.paste_from_keyboard(mark)
-            print(f"\nМарка: {mark}\n")
             return mark
         splitted_mark = cls.format_mark(mark)
         for index, part in enumerate(splitted_mark):
@@ -461,6 +466,8 @@ class MarkHelper:
         """Генерируем марку по формату для определенной группы товаров"""
 
         match product_type:
+            case MarkType.ANTICEPTIC:
+                return f"010{barcode}21{OSHelper.gen_random_string(13)}91{OSHelper.gen_random_string(4)}92{OSHelper.gen_random_string(44)}"
             case MarkType.TABAK:
                 print("\nКакой нужен МРЦ в копейках?")
                 price = int(input().strip())

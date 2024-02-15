@@ -194,6 +194,10 @@ class TestMarkHelper:
             (
                     r"010462930887704421DzkcYt2\u001d8005177000\u001d93dGVz",
                     ["010462930887704421DzkcYt2", "8005177000", "93dGVz"]
+            ),
+            (
+                "010210000000046321123456789723491444492fqkflqkkfwjfkqwjflqwkfjwkjf",
+                ["0102100000000463211234567897234", "914444", "92fqkflqkkfwjfkqwjflqwkfjwkjf"]
             )
         ])
     def test_format_mark(self, mark, splitted_mark):
