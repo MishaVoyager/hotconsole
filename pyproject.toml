@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hotconsole"
-version = "0.3.7"
+version = "0.4.1"
 authors = [
   { name = "Michael Noskov", email = "vecheren@gmail.com" },
 ]
@@ -29,7 +29,6 @@ dependencies = [
   "pylibdmtx>=0.1.10",
   "ansicon>=1.89.0"
 ]
-license-files = { paths = ["LICENSE.md"] }
 
 [project.urls]
 Homepage = "https://github.com/MishaVoyager/hotconsole"

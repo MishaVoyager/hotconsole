@@ -487,7 +487,9 @@ class MarkHelper:
             case MarkType.FURS:
                 return "RU-" + "430302-" + "ABC" + OSHelper.get_random_numbers(7)
             case MarkType.BEER:
-                return "010" + barcode + "21" + OSHelper.get_random_numbers(7) + "93" + "TrJ1"
+                # TODO Улучшить обработку GS, чтобы не вставлялись лишние символы перед 91, 92, 93
+                serial_number = OSHelper.get_random_numbers(7).replace("9", "1")
+                return "010" + barcode + "21" + serial_number + "93" + "TrJ1"
             case MarkType.BARCODE:
                 return cls.gen_barcode()
             case MarkType.EXCISE:
