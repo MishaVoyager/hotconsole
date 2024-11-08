@@ -13,15 +13,15 @@ RequestsHelper
     Для создания запросов к внешнему API.
 InnGenerator
     Для генерации ИНН
-MarkHelper
-    Для генерации марок
 """
 
 import ctypes
 import json
+import keyboard
 import os
 import random
 import re
+import requests
 import shutil
 import sqlite3
 import string
@@ -29,14 +29,11 @@ import subprocess
 import sys
 import time
 import traceback
-from enum import Enum
-
-import keyboard
-import requests
 import win32api
 import win32con
 import win32gui
 from PIL import Image
+from enum import Enum
 
 
 class DBHelper:
@@ -116,13 +113,15 @@ cd /d "%~dp0" && ( if exist "%temp%\getadmin.vbs" del "%temp%\getadmin.vbs" ) &&
         """Добавляет в папку батник для установки библиотек из requirements.txt.
         Он нужен для пользователей, которые не готовы руками вводить команды
         """
-        bat = f"""{OSHelper.get_vbs_script_for_admin_rights()}
+        bat = f"""@echo off
+{OSHelper.get_vbs_script_for_admin_rights()}
 python -m ensurepip
 python -m pip install --upgrade hotconsole
 python -m pip install -r "requirements.txt"
 python -m pip show -v hotconsole
-@echo off
-set /p userInput=Please, check if libraries succesfully installed"""
+set /p userInput=Press Enter to continue...
+exit
+"""
         folder_path = os.path.join(folder_path, bat_name)
         if not os.path.exists(folder_path):
             OSHelper.write_file(folder_path, bat)
@@ -389,163 +388,3 @@ class InnGenerator:
     def _get_control_number(cls, control_nums, inn: str) -> str:
         num = str(sum([x * int(y) for (x, y) in zip(control_nums, inn)]) % 11)
         return num if num != "10" else "0"
-
-
-class MarkType(str, Enum):
-    """Типы маркировки"""
-
-    EXCISE = "Алкоголь"
-    TABAK = "Сигареты"
-    CIS = "Шины, духи, одежда, обувь, фото"
-    WATER = "Вода"
-    MILK = "Молоко"
-    FURS = "Шубы"
-    BEER = "Пиво"
-    ANTICEPTIC = "БАДы и антисептики"
-    BARCODE = "Штрихкод"
-
-
-
-class MarkHelper:
-    """Класс Mark генирирует марки и вставляет их в режиме сканера"""
-
-    ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"%&'*+-./_,:;=<>?"
-    GSAsString = r"\u001d"
-    GS = chr(29)
-
-    @classmethod
-    def mark_types_values(cls):
-        return [i.value for i in MarkType]
-
-    @classmethod
-    def paste_from_keyboard(cls, text: str):
-        """Строка вставляется посимвольно, имитируя нажатие клавиш"""
-        for letter in text:
-            keyboard.write(letter)
-            time.sleep(0.02)
-
-    @classmethod
-    def paste_GS(cls):
-        """Скрипты имитируют GS-символ нажатием F8 - точно также, как сканеры"""
-        keyboard.send("F8")
-        time.sleep(0.02)
-
-    @classmethod
-    def format_mark(cls, mark: str) -> list:
-        """Превращает марку в массив строк, между которыми сканер должен вставлять GS-символ"""
-        result = []
-        mark = "".join(re.split(r"\\u001d||\r\n", mark))
-        groups_with_GS_before = ["91", "92", "93", "3103", "8005"]
-        GS_positions = [mark.rfind(group, 20, 40) for group in groups_with_GS_before]
-        GS_positions = sorted([pos for pos in GS_positions if pos != -1])
-        if len(GS_positions) == 0:
-            return [mark]
-        for i in range(len(GS_positions)):
-            if i == 0:
-                result.append(mark[:GS_positions[i]])
-            else:
-                result.append(mark[GS_positions[i - 1]:GS_positions[i]])
-        result.append(mark[GS_positions[-1]:])
-        return result
-
-    @classmethod
-    def paste_mark_in_scanner_mode(cls, mark: str, product_type: MarkType) -> str:
-        """Вставляем марку с GS-символами в нужных местах"""
-        if product_type == MarkType.EXCISE:
-            cls.paste_from_keyboard(mark)
-            return mark
-        splitted_mark = cls.format_mark(mark)
-        for index, part in enumerate(splitted_mark):
-            if index != 0:
-                cls.paste_GS()
-            cls.paste_from_keyboard(part)
-        return ''.join(splitted_mark)
-
-    @classmethod
-    def gen_mark(cls, product_type: MarkType, barcode: str = "2100000000463") -> str:
-        """Генерируем марку по формату для определенной группы товаров"""
-
-        match product_type:
-            case MarkType.ANTICEPTIC:
-                return f"010{barcode}21{OSHelper.gen_random_string(13)}91{OSHelper.gen_random_string(4)}92{OSHelper.gen_random_string(44)}"
-            case MarkType.TABAK:
-                print("\nКакой нужен МРЦ в копейках?")
-                price = int(input().strip())
-                return "0" + barcode + "-UWzSA8" + cls._encode_price_for_mark(price) + OSHelper.gen_random_string(4)
-            case MarkType.CIS:
-                return "010" + barcode + "21" + OSHelper.gen_random_string(13) + "93" + OSHelper.gen_random_string(13)
-            case MarkType.WATER:
-                return "010" + barcode + "21" + OSHelper.gen_random_string(13) + "93" + OSHelper.gen_random_string(4)
-            case MarkType.MILK:
-                print("\nКакой вес нужен в граммах?")
-                weight = input()
-                weight_group = "".join(["0"] * (6 - len(weight)) + [weight])
-                mark = "010" + barcode + "21" + OSHelper.gen_random_string(6) + "93" + "TrJ1"
-                if weight_group != "000000":
-                    mark += "3103" + weight_group
-                return mark
-            case MarkType.FURS:
-                return "RU-" + "430302-" + "ABC" + OSHelper.get_random_numbers(7)
-            case MarkType.BEER:
-                # TODO Улучшить обработку GS, чтобы не вставлялись лишние символы перед 91, 92, 93
-                serial_number = OSHelper.get_random_numbers(7).replace("9", "1")
-                return "010" + barcode + "21" + serial_number + "93" + "TrJ1"
-            case MarkType.BARCODE:
-                return cls.gen_barcode()
-            case MarkType.EXCISE:
-                return OSHelper.gen_random_string(150)
-            case _:
-                raise ValueError("Неправильный тип маркировки!")
-
-    @classmethod
-    def gen_barcode(cls, raw_barcode: str | None = None):
-        """Генерируем валидный штрихкод"""
-        if raw_barcode is None:
-            raw_barcode = "3" + OSHelper.get_random_numbers(11)
-        rates = "131313131313"
-        sum_result = 0
-        for i in range(len(raw_barcode)):
-            sum_result += int(raw_barcode[i]) * int(rates[i])
-        control_number = 10 - sum_result % 10
-        return raw_barcode + str(control_number)
-
-    @classmethod
-    def _encode_price_for_mark(cls, price: int) -> str:
-        """Кодируем произвольный МРЦ для группы из 4 символов в марке"""
-        res = [" "] * 4
-        positions = [0] * 4
-        for index in range(len(positions) - 1, -1, -1):
-            if price != 0:
-                positions[index] = price % 80
-                price = price // 80
-            res[index] = cls.ALPHABET[positions[index]]
-        return "".join(res)
-
-    @classmethod
-    def parse_datamatrix_from_file(cls, path: str) -> str:
-        """Превращаем картинку с маркой в код марки"""
-        try:
-            from pylibdmtx.pylibdmtx import decode
-
-            code = decode(Image.open(path), max_count=1)
-            return code[0][0].decode("utf-8")
-        except Exception:
-            print(
-                """
-                \nДля сканирования марок с изображений надо скачать
-                  https://www.microsoft.com/en-US/download/details.aspx?id=40784\n"""
-            )
-            return ""
-
-    @classmethod
-    def _create_image_with_datamatrix(cls, path: str, mark: str = "010210000000046321ocuiizkspsizl93lwrasxasamzls"):
-        """
-        Создает по коду марки изображение марки в файл dm.png
-        Не используется, поскольку код марки легко превратить в марку в генераторе типа
-        https://barcode.tec-it.com/ru/DataMatrix
-        """
-        from pylibdmtx.pylibdmtx import encode
-
-        encoded = encode(mark.encode("utf8"))
-        img = Image.frombytes("RGB", (encoded.width, encoded.height), encoded.pixels)
-        img.save(path)

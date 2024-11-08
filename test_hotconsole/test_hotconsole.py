@@ -1,12 +1,11 @@
 import json
 import os
+import pytest
 import sqlite3
 from unittest import mock
 
-import pytest
-
 from hotconsole import hotconsole
-from hotconsole.helpers import MarkHelper, MarkType, InnGenerator, DBHelper, OSHelper
+from hotconsole.helpers import InnGenerator, DBHelper, OSHelper
 
 
 class TestOSHelper:
@@ -125,83 +124,6 @@ class TestInnGenerator:
     def test_inn_for_ul(self, real_inn):
         actual_control_numbers = InnGenerator._get_controls_inn_ul(real_inn[:-1])
         assert actual_control_numbers == real_inn[-1]
-
-
-class TestMarkHelper:
-    @pytest.mark.parametrize("price, expected", [(0, "AAAA"), (1, "AAAB"), (1000000, "B=UA")])
-    def test_encode_price_for_mark(self, price, expected):
-        coded_min_price = MarkHelper._encode_price_for_mark(price)
-        assert coded_min_price == expected
-
-    @pytest.mark.parametrize("real_barcode", ["3321339135834", "2100000000418"])
-    def test_gen_barcode(self, real_barcode):
-        actual_control_number = MarkHelper.gen_barcode(real_barcode[:-1])[-1]
-        assert actual_control_number == real_barcode[-1]
-
-    @pytest.mark.parametrize("weight, expected", [("985931", "985931"), ("1", "000001")])
-    def test_gen_mark_milk(self, monkeypatch: pytest.MonkeyPatch, weight, expected):
-        monkeypatch.setattr("builtins.input", lambda: weight)
-        mark = MarkHelper.gen_mark(MarkType.MILK)
-        assert "3103" in mark
-        assert mark[-6:] == expected
-
-    def test_gen_mark_milk_without_weight(self, monkeypatch: pytest.MonkeyPatch):
-        monkeypatch.setattr("builtins.input", lambda: "0")
-        mark = MarkHelper.gen_mark(MarkType.MILK)
-        assert "3103" not in mark
-        assert mark[-6:] != "000000"
-
-    @pytest.mark.parametrize(
-        "mark, splitted_mark",
-        [
-            (
-                    r"010210000000008121mmykmz\u001d93TrJ1\u001d3103005678",
-                    ["010210000000008121mmykmz", "93TrJ1", "3103005678"]
-            ),
-            (
-                    r"010210000000008121mmykmz93TrJ13103005678",
-                    ["010210000000008121mmykmz", "93TrJ1", "3103005678"]
-            ),
-            (
-                    r"04606203086627-UWzSA8AABUptys",
-                    ["04606203086627-UWzSA8AABUptys"]
-            ),
-            (
-                    r"(01)03221424250793(21)Xz&NASDPoeBd&0000000(91)8039(92)f4+32XYI/05BpU41ug3v1J8+t/9oaAutrfUzgVBWsQ==",
-                    [
-                        "(01)03221424250793(21)Xz&NASDPoeBd&0000000(91)8039(92)f4+32XYI/05BpU41ug3v1J8+t/9oaAutrfUzgVBWsQ=="]
-            ),
-            (
-                    r"01030410947877712152TZW&93cAce31031234567",
-                    ["01030410947877712152TZW&", "93cAce", "31031234567"]
-            ),
-            (
-                    r"RU-430302-ABC0686893",
-                    ["RU-430302-ABC0686893"]
-            ),
-            (
-                    r"3595193310382",
-                    ["3595193310382"]
-            ),
-            (
-                    "010210000000\r\n008121mmykmz93TrJ13103005678",
-                    ["010210000000008121mmykmz", "93TrJ1", "3103005678"]
-            ),
-            (
-                    r"010462930887704421DzkcYt2\u001d8005177000\u001d93dGVz",
-                    ["010462930887704421DzkcYt2", "8005177000", "93dGVz"]
-            ),
-            (
-                    r"010462930887704421DzkcYt2\u001d8005177000\u001d93dGVz",
-                    ["010462930887704421DzkcYt2", "8005177000", "93dGVz"]
-            ),
-            (
-                "010210000000046321123456789723491444492fqkflqkkfwjfkqwjflqwkfjwkjf",
-                ["0102100000000463211234567897234", "914444", "92fqkflqkkfwjfkqwjflqwkfjwkjf"]
-            )
-        ])
-    def test_format_mark(self, mark, splitted_mark):
-        assert MarkHelper.format_mark(mark) == splitted_mark
 
 
 class TestIni:
